@@ -16,6 +16,7 @@ app.use(express.json());
 
 
 const uri = `mongodb+srv://${process.env.DB_user}:${process.env.DB_PASS}@cluster0.j6xnqa4.mongodb.net/?retryWrites=true&w=majority`;
+// const uri = `mongodb+srv://brandsproduct:FbVGpB14qyIU1kMJ@cluster0.j6xnqa4.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -35,9 +36,16 @@ async function run() {
         const brandCollection = client.db('brandsDB').collection('brands')
         const newCollection = client.db('newProductDB').collection('newProducts')
         const bestCollection = client.db('bestsellerDB').collection('bestSellers')
+        const mycartCollection = client.db('mycartDB').collection('cartItems');
+        const brandnameCollection = client.db('brandsnameDB').collection('brandname');
 
 
 
+        app.get('/brandname', async (req, res) => {
+            const cursor = brandnameCollection.find();
+            const result = await cursor.toArray();
+            res.send(result)
+        })
         app.get('/brands', async (req, res) => {
             const cursor = brandCollection.find();
             const result = await cursor.toArray();
@@ -85,10 +93,36 @@ async function run() {
 
 
 
+
+        app.get('/cartItems', async (req, res) => {
+            const cursor = mycartCollection.find();
+            const result = await cursor.toArray();
+            res.send(result)
+        })
+
+
+
+        app.post('/cartItems', async (req, res) => {
+            const productDetails = req.body;
+            delete productDetails._id
+            const result = await mycartCollection.insertOne(productDetails);
+            res.send(result);
+        });
+
+
+
         app.post('/brands', async (req, res) => {
             const newBrand = req.body;
             console.log(newBrand);
             const result = await brandCollection.insertOne(newBrand);
+            res.send(result)
+        })
+
+
+        app.delete('/cartItems/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await mycartCollection.deleteOne(query);
             res.send(result)
         })
 
